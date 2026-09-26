@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: weatherguard-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: weatherguard_user
+      POSTGRES_PASSWORD: weatherguard_password
+      POSTGRES_DB: weatherguard_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U weatherguard_user -d weatherguard_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: weatherguard-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: weatherguard-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://weatherguard_user:weatherguard_password@postgres:5432/weatherguard_db
+      SECRET_KEY: weatherguard-super-secret-production-key-2026
+      ENVIRONMENT: production
+      DATA_REFRESH_INTERVAL_MINUTES: 15
+      DEMO_MODE: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app/data:/app/backend/app/data
+
+  frontend:
+    image: node:22-alpine
+    container_name: weatherguard-frontend
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:

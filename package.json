@@ -1,0 +1,24 @@
+{
+  "name": "weatherguard-ai",
+  "version": "1.0.0",
+  "description": "WeatherGuard AI - AI-Powered Medium-Range Forecast Confidence & Bust Detection System",
+  "private": true,
+  "scripts": {
+    "start:backend": "python backend/run.py",
+    "start:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "test:backend": "python -m pytest backend/tests/",
+    "lint:frontend": "npm --prefix frontend run lint"
+  },
+  "keywords": [
+    "meteorology",
+    "ai",
+    "weather-forecast",
+    "bust-detection",
+    "xgboost",
+    "shap",
+    "confidence-engine"
+  ],
+  "author": "WeatherGuard AI Engineering Team",
+  "license": "Apache-2.0"
+}

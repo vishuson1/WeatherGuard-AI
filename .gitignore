@@ -1,0 +1,37 @@
+# Node.js
+node_modules/
+dist/
+npm-debug.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+venv/
+env/
+.env
+
+# SQLite
+*.db
+*.sqlite3
+
+# Models
+*.joblib
+*.pkl
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
