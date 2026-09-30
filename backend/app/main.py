@@ -63,15 +63,44 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "Internal meteorological processing error", "error": str(exc)}
     )
 
-@app.get("/")
-def root():
-    return {
-        "service": "WeatherGuard AI",
-        "description": "AI-Powered Medium-Range Forecast Confidence & Bust Detection Platform",
-        "version": settings.VERSION,
-        "docs_url": "/docs",
-        "api_health": "/api/health"
-    }
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse, FileResponse
+import os
+
+# Serve Frontend Static Assets & SPA Fallback (Option C: Unified Container)
+frontend_dist = os.getenv("FRONTEND_DIST", "/app/frontend/dist")
+if not os.path.exists(frontend_dist):
+    local_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
+    if os.path.exists(local_dist):
+        frontend_dist = local_dist
+
+if os.path.exists(frontend_dist):
+    assets_dir = os.path.join(frontend_dist, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/")
+    async def serve_index():
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        if full_path.startswith("api") or full_path in ["docs", "redoc", "openapi.json"]:
+            return JSONResponse(status_code=404, content={"detail": "Not found"})
+        file_path = os.path.join(frontend_dist, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
+else:
+    @app.get("/")
+    def root():
+        return {
+            "service": "WeatherGuard AI",
+            "description": "AI-Powered Medium-Range Forecast Confidence & Bust Detection Platform",
+            "version": settings.VERSION,
+            "docs_url": "/docs",
+            "api_health": "/api/health"
+        }
 
 if __name__ == "__main__":
     import uvicorn
